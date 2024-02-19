@@ -1,0 +1,11 @@
+{
+  "name": "chinczyk",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/biela000/chinczyk.git",
+  "author": "biela000 <86307737+biela000@users.noreply.github.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

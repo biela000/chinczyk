@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+:root {
+    --black-olive: #423e37ff;
+    --blue-munsell: #068d9dff;
+    --light-coral: #dd7373ff;
+    --beige: #edead0ff;
+    --cool-gray: #a09abcff;
+    --dark-beige: #dad9b5;
+
+    --xxlarge: 24rem;
+    --xlarge: 16rem;
+    --large: 10rem;
+    --big: 2.5rem;
+    --normal: 1rem;
+    --small: .5rem;
+}
+
+html {
+    background-color: var(--beige);
+    font-family: "Roboto", sans-serif;
+    color: var(--black-olive);
+}
+
+.form-input {
+    background-color: var(--dark-beige);
+    outline: none;
+    text-align: center;
+    border: none;
+}
+
+.form-input:focus {
+    border: 1px solid var(--black-olive);
+}
+
+.form-button {
+    background-color: var(--cool-gray);
+    border: none;
+    padding: var(--normal);
+}
+
+.form-button:active {
+    border: 1px solid var(--black-olive);
+}
