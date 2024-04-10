@@ -1,0 +1,21 @@
+@import "reset.css";
+@import "global.css";
+@import "normalize.css";
+
+body {
+    width: 100%;
+}
+
+.board-img {
+    display: none;
+}
+
+.board-container {
+    display: grid;
+    place-items: center;
+    margin-top: var(--big);
+}
+
+#board {
+    margin: auto;
+}

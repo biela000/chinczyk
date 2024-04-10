@@ -18,13 +18,14 @@ body {
 }
 
 .page-title {
-    font-size: var(--xxlarge);
+    font-size: 20vw;
     color: var(--cool-gray);
 }
 
 .player-info-form {
     display: flex;
     justify-content: space-between;
+    padding-top: var(--small);
 }
 
 .nickname-label {
