@@ -11,5 +11,7 @@ form.addEventListener("submit", async (event) => {
 
     if (response.ok) {
         window.location.href = `/chinczyk/game.html?gameId=${data.id}&nickname=${nicknameInput.value}`;
+    } else {
+        console.log(response);
     }
 })
