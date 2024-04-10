@@ -2,24 +2,22 @@
 
 require_once __DIR__ . "/../vendor/autoload.php";
 
-use MongoDB\Client;
-
 class DbUtils
 {
-    public static function connect()
+    public static function connect(): MongoDB\Database
     {
         self::loadEnvironmentVariables();
         $db_link = self::createDbLink();
         return (new MongoDB\Client($db_link))->selectDatabase($_ENV['DB_NAME']);
     }
 
-    private static function loadEnvironmentVariables()
+    private static function loadEnvironmentVariables(): void
     {
         $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . "/..");
         $dotenv->load();
     }
 
-    private static function createDbLink()
+    private static function createDbLink(): string
     {
         $db_link = $_ENV['DB'];
 
@@ -29,14 +27,17 @@ class DbUtils
         return $db_link;
     }
 
-    public static function findEmptyGame($games)
+    public static function findEmptyGame(MongoDB\Collection $games): array|null|object
     {
         return $games->findOne(["full" => false]);
     }
 
-    public static function createGame($games, $player_nickname)
+    public static function createGame(
+        MongoDb\Collection $games,
+        string $player_nickname
+    ): array|object
     {
-        return $games->insertOne([
+        $game = [
             "_id" => rand(),
             "players" => [
                 ["name" => $player_nickname, "color" => "red", "ready" => false],
@@ -54,10 +55,18 @@ class DbUtils
             ],
             "created_at" => date('Y-m-d H:i:s'),
             "full" => false
-        ]);
+        ];
+
+        $insertedGameId = $games->insertOne($game)->getInsertedId();
+
+        return $games->findOne(["_id" => $insertedGameId]);
     }
 
-    public static function addPlayer($games, $game, $player_nickname)
+    public static function addPlayer(
+        MongoDB\Collection $games,
+        array|object $game,
+        string $player_nickname
+    ): array|object
     {
         foreach ($game["players"] as $player) {
             if ($player["color"] == "yellow") {
@@ -70,9 +79,11 @@ class DbUtils
             }
         }
 
-        return $games->replaceOne(
+        $games->replaceOne(
             ["_id" => $game["_id"]],
             $game
         );
+
+        return $game;
     }
 }
