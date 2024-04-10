@@ -29,8 +29,50 @@ class DbUtils
         return $db_link;
     }
 
-    public static function findEmptyGame($collection)
+    public static function findEmptyGame($games)
     {
-        return $collection->findOne(["full" => false]);
+        return $games->findOne(["full" => false]);
+    }
+
+    public static function createGame($games, $player_nickname)
+    {
+        return $games->insertOne([
+            "_id" => rand(),
+            "players" => [
+                ["name" => $player_nickname, "color" => "red", "ready" => false],
+                ["name" => NULL, "color" => "blue", "ready" => false],
+                ["name" => NULL, "color" => "green", "ready" => false],
+                ["name" => NULL, "color" => "yellow", "ready" => false]
+            ],
+            "turn" => 0,
+            "current_move" => NULL,
+            "positions" => [
+                "red" => [0, 0, 0, 0],
+                "blue" => [0, 0, 0, 0],
+                "green" => [0, 0, 0, 0],
+                "yellow" => [0, 0, 0, 0]
+            ],
+            "created_at" => date('Y-m-d H:i:s'),
+            "full" => false
+        ]);
+    }
+
+    public static function addPlayer($games, $game, $player_nickname)
+    {
+        foreach ($game["players"] as $player) {
+            if ($player["color"] == "yellow") {
+                $game["full"] = true;
+            }
+
+            if (is_null($player["name"])) {
+                $player["name"] = $player_nickname;
+                break;
+            }
+        }
+
+        return $games->replaceOne(
+            ["_id" => $game["_id"]],
+            $game
+        );
     }
 }
