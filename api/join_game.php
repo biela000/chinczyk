@@ -4,18 +4,14 @@ require_once __DIR__ . "/utils/DbUtils.php";
 
 $database = DbUtils::connect();
 
-$games = $database->games;
+$games = $database->selectCollection("games");
 
 $game = DbUtils::findEmptyGame($games);
 
-echo "a";
 if (is_null($game)) {
-    $game = DbUtils::createGame($games, $_GET["nickname"]);
+    $game = DbUtils::createGame($games, $_GET["nickname"], $_GET["playerId"]);
 } else {
-    $game = DbUtils::addPlayer($games, $game, $_GET["nickname"]);
+    $game = DbUtils::addPlayer($games, $game, $_GET["nickname"], $_GET["playerId"]);
 }
-echo "a";
-
-print_r($game);
 
 echo json_encode(["id" => $game["_id"]]);

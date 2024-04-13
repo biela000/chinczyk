@@ -19,3 +19,109 @@ body {
 #board {
     margin: auto;
 }
+
+.player-panel-container {
+    position: fixed;
+    width: 300px;
+    height: 200px;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.player-panel {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.player-panel-container.red {
+    top: 15px;
+    left: 15px;
+
+    .player-panel {
+        background-color: rgba(255, 0, 0, 0.6);
+    }
+
+    .player-panel.active {
+        background-color: rgba(255, 0, 0, 1);
+    }
+}
+
+.player-panel-container.blue {
+    top: 15px;
+    right: 15px;
+
+    .player-panel {
+        background-color: rgba(0, 0, 255, 0.6);
+    }
+
+    .player-panel.active {
+        background-color: rgba(0, 0, 255, 1);
+    }
+}
+
+.player-panel-container.green {
+    bottom: 15px;
+    left: 15px;
+
+    .player-panel {
+        background-color: rgba(0, 128, 0, 0.6);
+    }
+
+    .player-panel.active {
+        background-color: rgba(0, 128, 0, 1);
+    }
+}
+
+.player-panel-container.yellow {
+    bottom: 15px;
+    right: 15px;
+
+    .player-panel {
+        background-color: rgba(255, 255, 0, 0.6);
+    }
+
+    .player-panel.active {
+        background-color: rgba(255, 255, 0, 1);
+    }
+}
+
+.player-panel-container.ready {
+    border: 7px solid lightgreen;
+}
+
+.player-panel-container.unready {
+    border: 7px solid orangered;
+}
+
+.player-panel h3, .player-panel h4 {
+    color: white;
+    text-align: center;
+}
+
+.player-panel h3 {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.ready-button.template {
+    display: none;
+}
+
+.ready-button {
+    display: block;
+    margin: auto;
+    width: 100px;
+    height: 30px;
+    border: none;
+    border-radius: 5px;
+    background-color: orangered;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.ready-button.ready {
+    background-color: lightgreen;
+}

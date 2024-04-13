@@ -8,9 +8,45 @@
 </head>
 <body>
     <img src="media/img/board.svg" alt="board" class="board-img">
+
     <main class="board-container">
+        <aside class="player-panel-container red">
+            <div class="player-panel" data-color="red">
+                <h3 class="player-name"></h3>
+                <h4 class="player-crowns"></h4>
+            </div>
+        </aside>
+        <aside class="player-panel-container blue">
+            <div class="player-panel" data-color="blue">
+                <h3 class="player-name"></h3>
+                <h4 class="player-crowns"></h4>
+            </div>
+        </aside>
+        <aside class="player-panel-container green">
+            <div class="player-panel" data-color="green">
+                <h3 class="player-name"></h3>
+                <h4 class="player-crowns"></h4>
+            </div>
+        </aside>
+        <aside class="player-panel-container yellow">
+            <div class="player-panel" data-color="yellow">
+                <h3 class="player-name"></h3>
+                <h4 class="player-crowns"></h4>
+            </div>
+        </aside>
         <canvas id="board" width="900" height="900"></canvas>
     </main>
-    <script src="dist/game.js"></script>
+
+    <button class="ready-button template">Not ready</button>
+
+    <script src="dist/game.js" type="module"></script>
+    <script src="dist/classes/Game.js" type="module"></script>
+    <script src="dist/utils/CanvasUtils.js" type="module"></script>
+    <script src="dist/utils/constants.js" type="module"></script>
+    <script src="dist/types/Positions.js" type="module"></script>
+    <script src="dist/types/Color.js" type="module"></script>
+    <script src="dist/types/GamePayload.js" type="module"></script>
+    <script src="dist/types/Player.js" type="module"></script>
+    <script src="dist/types/Positions.js" type="module"></script>
 </body>
 </html>

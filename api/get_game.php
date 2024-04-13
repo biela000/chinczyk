@@ -4,7 +4,7 @@ require_once __DIR__ . "/utils/DbUtils.php";
 
 $database = DbUtils::connect();
 
-$collection = $database->games;
+$collection = $database->selectCollection("games");
 
 $document = $collection->findOne(["_id" => (int)$_GET["id"]]);
 

@@ -34,26 +34,26 @@ class DbUtils
 
     public static function createGame(
         MongoDb\Collection $games,
-        string $player_nickname
+        string $player_nickname,
+        int $player_id
     ): array|object
     {
         $game = [
             "_id" => rand(),
             "players" => [
-                ["name" => $player_nickname, "color" => "red", "ready" => false],
-                ["name" => NULL, "color" => "blue", "ready" => false],
-                ["name" => NULL, "color" => "green", "ready" => false],
-                ["name" => NULL, "color" => "yellow", "ready" => false]
+                ["_id" => $player_id, "name" => $player_nickname, "color" => "red", "ready" => false],
+                ["_id" => NULL, "name" => NULL, "color" => "blue", "ready" => false],
+                ["_id" => NULL, "name" => NULL, "color" => "green", "ready" => false],
+                ["_id" => NULL, "name" => NULL, "color" => "yellow", "ready" => false]
             ],
-            "turn" => 0,
-            "current_move" => NULL,
+            "currentColor" => "red",
             "positions" => [
                 "red" => [0, 0, 0, 0],
                 "blue" => [0, 0, 0, 0],
                 "green" => [0, 0, 0, 0],
                 "yellow" => [0, 0, 0, 0]
             ],
-            "created_at" => date('Y-m-d H:i:s'),
+            "createdAt" => date('Y-m-d H:i:s'),
             "full" => false
         ];
 
@@ -65,7 +65,8 @@ class DbUtils
     public static function addPlayer(
         MongoDB\Collection $games,
         array|object $game,
-        string $player_nickname
+        string $player_nickname,
+        int $player_id
     ): array|object
     {
         foreach ($game["players"] as $player) {
@@ -75,6 +76,7 @@ class DbUtils
 
             if (is_null($player["name"])) {
                 $player["name"] = $player_nickname;
+                $player["_id"] = $player_id;
                 break;
             }
         }
