@@ -9,4 +9,9 @@ export type GamePayload = {
     positions: Positions;
     createdAt: string;
     full: boolean;
+    hasGameStarted: boolean;
+    moveCountdown: number;
+    isGameGoing: boolean;
+    currentMove: { _id: number, pawnIndex: number } | null;
+    pointsThrown: number;
 };

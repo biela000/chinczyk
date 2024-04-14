@@ -29,7 +29,7 @@ class DbUtils
 
     public static function findEmptyGame(MongoDB\Collection $games): array|null|object
     {
-        return $games->findOne(["full" => false]);
+        return $games->findOne(["full" => false, "hasGameStarted" => false]);
     }
 
     public static function createGame(
@@ -46,7 +46,7 @@ class DbUtils
                 ["_id" => NULL, "name" => NULL, "color" => "green", "ready" => false],
                 ["_id" => NULL, "name" => NULL, "color" => "yellow", "ready" => false]
             ],
-            "currentColor" => "red",
+            "currentColor" => NULL,
             "positions" => [
                 "red" => [0, 0, 0, 0],
                 "blue" => [0, 0, 0, 0],
@@ -54,7 +54,12 @@ class DbUtils
                 "yellow" => [0, 0, 0, 0]
             ],
             "createdAt" => date('Y-m-d H:i:s'),
-            "full" => false
+            "full" => false,
+            "hasGameStarted" => false,
+            "moveCountdown" => 0,
+            "currentMove" => NULL,
+            "isGameGoing" => true,
+            "pointsThrown" => 0,
         ];
 
         $insertedGameId = $games->insertOne($game)->getInsertedId();
@@ -87,5 +92,52 @@ class DbUtils
         );
 
         return $game;
+    }
+
+    public static function startGame(MongoDB\Collection $games, array|object $game): array|object
+    {
+        $game["hasGameStarted"] = true;
+        $game["currentColor"] = "red";
+
+        $games->replaceOne(
+            ["_id" => $game["_id"]],
+            $game
+        );
+
+        return $game;
+    }
+
+    public static function startMoveCountdown(MongoDB\Collection $games, array|object $game): array|object
+    {
+        $game["moveCountdown"] = MOVE_TIME;
+        $lastMove = $game["currentMove"];
+
+        while ($game["moveCountdown"] > 0 && $game["isGameGoing"]) {
+            sleep(1);
+            $game = $games->findOne(["_id" => $game["_id"]]);
+            if (isset($game["currentMove"]) && $game["currentMove"]["_id"] != $lastMove["_id"]) {
+                $game["moveCountdown"] = MOVE_TIME;
+            }
+            $game["moveCountdown"]--;
+            $games->replaceOne(
+                ["_id" => $game["_id"]],
+                $game
+            );
+        }
+
+        $currentQueuePosition = array_search($game["currentColor"], array_column($game["players"], "color"));
+        $nextQueuePosition = ($currentQueuePosition + 1) % 4;
+
+        $game["currentColor"] = $game["players"][$nextQueuePosition]["color"];
+        $game["currentMove"] = NULL;
+
+        if ($game["isGameGoing"]) {
+            $games->replaceOne(
+                ["_id" => $game["_id"]],
+                $game
+            );
+
+            self::startMoveCountdown($games, $game);
+        }
     }
 }
