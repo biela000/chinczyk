@@ -34,17 +34,12 @@ foreach ($players as $key => $player) {
     }
 }
 
-$games->updateOne(["_id" => $game_id], ['$set' => ["players" => $players]]);
+$games->updateOne(["_id" => $game_id], ['$set' => ["players" => $players, "playersCount" => $playersCount]]);
 
 $areAllPlayersReady = $playersCount == $readyPlayersCount && $playersCount > 1;
 
 if ($areAllPlayersReady) {
     DbUtils::startGame($games, $game);
-
-    echo json_encode($games->findOne(["_id" => $game_id]));
-
-    DbUtils::startMoveCountdown($games, $game);
-} else {
-    echo json_encode($games->findOne(["_id" => $game_id]));
 }
 
+echo json_encode($games->findOne(["_id" => $game_id]));

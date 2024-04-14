@@ -10,8 +10,9 @@ export type GamePayload = {
     createdAt: string;
     full: boolean;
     hasGameStarted: boolean;
-    moveCountdown: number;
     isGameGoing: boolean;
     currentMove: { _id: number, pawnIndex: number } | null;
-    pointsThrown: number;
+    pointsThrown: number | null;
+    moveStartedAt: number;
+    hasThrownDice: boolean;
 };

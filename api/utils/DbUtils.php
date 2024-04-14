@@ -56,10 +56,19 @@ class DbUtils
             "createdAt" => date('Y-m-d H:i:s'),
             "full" => false,
             "hasGameStarted" => false,
-            "moveCountdown" => 0,
             "currentMove" => NULL,
             "isGameGoing" => true,
-            "pointsThrown" => 0,
+            "pointsThrown" => NULL,
+            "moveStartedAt" => 0,
+            "playersCount" => 1,
+            "pawnsToMove" => NULL,
+            "hasThrownDice" => false,
+            "finishedPawns" => [
+                "red" => 0,
+                "blue" => 0,
+                "green" => 0,
+                "yellow" => 0
+            ],
         ];
 
         $insertedGameId = $games->insertOne($game)->getInsertedId();
@@ -98,6 +107,7 @@ class DbUtils
     {
         $game["hasGameStarted"] = true;
         $game["currentColor"] = "red";
+        $game["moveStartedAt"] = time() * 1000;
 
         $games->replaceOne(
             ["_id" => $game["_id"]],
@@ -107,37 +117,69 @@ class DbUtils
         return $game;
     }
 
-    public static function startMoveCountdown(MongoDB\Collection $games, array|object $game): array|object
+    public static function restartTurn(MongoDB\Collection $games, array|object $game): array|object
     {
-        $game["moveCountdown"] = MOVE_TIME;
-        $lastMove = $game["currentMove"];
-
-        while ($game["moveCountdown"] > 0 && $game["isGameGoing"]) {
-            sleep(1);
-            $game = $games->findOne(["_id" => $game["_id"]]);
-            if (isset($game["currentMove"]) && $game["currentMove"]["_id"] != $lastMove["_id"]) {
-                $game["moveCountdown"] = MOVE_TIME;
-            }
-            $game["moveCountdown"]--;
-            $games->replaceOne(
-                ["_id" => $game["_id"]],
-                $game
-            );
-        }
-
-        $currentQueuePosition = array_search($game["currentColor"], array_column($game["players"], "color"));
-        $nextQueuePosition = ($currentQueuePosition + 1) % 4;
-
-        $game["currentColor"] = $game["players"][$nextQueuePosition]["color"];
+        $game["pawnsToMove"] = NULL;
+        $game["hasThrownDice"] = false;
         $game["currentMove"] = NULL;
+        $game["moveStartedAt"] = time() * 1000;
 
-        if ($game["isGameGoing"]) {
-            $games->replaceOne(
-                ["_id" => $game["_id"]],
-                $game
-            );
+        $games->replaceOne(
+            ["_id" => $game["_id"]],
+            $game
+        );
 
-            self::startMoveCountdown($games, $game);
+        return $game;
+    }
+
+    public static function passMove(MongoDB\Collection $games, array|object $game): array|object
+    {
+        $game["pawnsToMove"] = NULL;
+        $game["hasThrownDice"] = false;
+        $game["currentMove"] = NULL;
+        $game["currentColor"] = self::getNextColor($game);
+        $game["moveStartedAt"] = time() * 1000;
+
+        $games->replaceOne(
+            ["_id" => $game["_id"]],
+            $game
+        );
+
+        return $game;
+    }
+
+    public static function getNextColor(array|object $game): string
+    {
+        $currentColorIndex = 0;
+        $colors = ["red", "blue", "green", "yellow"];
+
+        foreach ($colors as $key => $color) {
+            if ($color == $game["currentColor"]) {
+                $currentColorIndex = $key;
+                break;
+            }
         }
+
+        return $colors[($currentColorIndex + 1) % $game["playersCount"]];
+    }
+
+    public static function getActualPosition(int $position, string $color): int
+    {
+        if ($position == 0) {
+            return 0;
+        }
+
+        // Pawn cannot be beaten
+        if ($position > 40) {
+            return -1;
+        }
+
+        return match ($color) {
+            "red" => $position,
+            "blue" => $position + 10 > 40 ? ($position + 10) % 41 + 1 : $position + 10,
+            "green" => $position + 20 > 40 ? ($position + 20) % 41 + 1 : $position + 20,
+            "yellow" => $position + 30 > 40 ? ($position + 30) % 41 + 1 : $position + 30,
+            default => -1,
+        };
     }
 }

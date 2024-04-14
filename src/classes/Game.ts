@@ -1,7 +1,13 @@
 import { Color } from "../types/Color.js";
 import { Player } from "../types/Player.js";
 import { Positions } from "../types/Positions.js";
-import {API_LINK, GET_GAME_LINK, UPDATE_INTERVAL} from "../utils/constants.js";
+import {
+    API_LINK,
+    GET_GAME_LINK,
+    MOVE_TIME_SECONDS,
+    STARTING_CANVAS_POSITIONS,
+    UPDATE_INTERVAL
+} from "../utils/constants.js";
 import { GamePayload } from "../types/GamePayload.js";
 import CanvasUtils from "../utils/CanvasUtils.js";
 
@@ -10,6 +16,8 @@ export default class Game {
     private player: Player;
     private players: Player[] = [];
     private currentColor: Color = "red";
+    private pointsThrown: number | null = null;
+    private hasThrownDice: boolean = false;
     private positions: Positions = {
         red: [0, 0, 0, 0],
         green: [0, 0, 0, 0],
@@ -23,6 +31,8 @@ export default class Game {
     private readonly playerPanels: NodeListOf<HTMLDivElement>;
     private readonly dice: HTMLImageElement
     private readonly clock: HTMLHeadingElement;
+    private pawnsToMove: number[] | null = null;
+    private playerCanvasPositions = [...STARTING_CANVAS_POSITIONS["red"]];
 
     constructor(id: number, player: { _id: number, name: string }, ctx: CanvasRenderingContext2D, boardImage: HTMLImageElement, playerPanels: NodeListOf<HTMLDivElement>, dice: HTMLImageElement, clock: HTMLHeadingElement) {
         this._id = id;
@@ -40,11 +50,67 @@ export default class Game {
     public startGame(): void {
         this.isGameGoing = true;
 
-        this.dice.addEventListener("click", () => {
+        this.dice.addEventListener("click", async () => {
+            if (this.currentColor === this.player.color && !this.hasThrownDice) {
+                this.hasThrownDice = true;
+                const response = await fetch(`${API_LINK}/throw_dice.php?gameId=${this._id}&playerId=${this.player._id}`);
+                const dicePayload = (await response.json()) as { pointsThrown: number, pawnsToMove: number[] };
 
+                this.pointsThrown = dicePayload.pointsThrown;
+                this.pawnsToMove = dicePayload.pawnsToMove;
+
+                this.updateDice();
+
+                if (this.pawnsToMove.length === 0) {
+                    this.pointsThrown = null;
+                    this.pawnsToMove = null;
+                    this.updateDice();
+                    await this.passMove();
+                }
+
+                if (this.pawnsToMove?.length === 1) {
+                    const response = await fetch(`${API_LINK}/move_pawn.php?gameId=${this._id}&playerId=${this.player._id}&pawnIndex=${this.pawnsToMove[0]}`);
+                    const gamePayload = await response.json();
+
+                    this.updateGame(gamePayload);
+                }
+            }
+        });
+
+        this.ctx.canvas.addEventListener("click", async (e: MouseEvent) => {
+            if (this.currentColor === this.player.color && this.pawnsToMove && this.pawnsToMove.length > 0) {
+                const x = e.offsetX;
+                const y = e.offsetY;
+
+                let clickedPawn = this.playerCanvasPositions.findIndex(([pawnX, pawnY]) => {
+                    return Math.abs(pawnX - x) < 25 && Math.abs(pawnY - y) < 25;
+                });
+
+                if (this.playerCanvasPositions[clickedPawn].includes(0)) {
+                    clickedPawn = -1;
+                }
+
+                if (clickedPawn !== -1 && this.pawnsToMove.includes(clickedPawn)) {
+                    const response = await fetch(`${API_LINK}/move_pawn.php?gameId=${this._id}&playerId=${this.player._id}&pawnIndex=${clickedPawn}`);
+                    const gamePayload = await response.json();
+
+                    this.updateGame(gamePayload);
+                }
+            }
         });
 
         this.loop();
+    }
+
+    private async passMove(): Promise<void> {
+        const response = await fetch(`${API_LINK}/pass_move.php?gameId=${this._id}&playerId=${this.player._id}`);
+        const gamePayload = await response.json();
+
+        this.updateGame(gamePayload);
+    }
+
+    private updateDice(): void {
+        this.dice.src = `/chinczyk/media/img/dice${this.pointsThrown}.png`;
     }
 
     private async fetchGame(): Promise<GamePayload> {
@@ -58,17 +124,24 @@ export default class Game {
         this.players = newGame.players;
         this.player = this.players.find(player => player._id === this.player._id)!;
         this.hasGameStarted = newGame.hasGameStarted;
+        this.isGameGoing = newGame.isGameGoing;
         this.currentColor = newGame.currentColor;
         this.positions = newGame.positions;
+        this.pointsThrown = newGame.pointsThrown;
+        this.hasThrownDice = newGame.hasThrownDice;
 
-        this.draw();
         this.updatePlayerPanels();
-        this.updateClock(newGame.moveCountdown);
+
+        if (this.hasGameStarted) {
+            this.draw();
+            this.updateClock(newGame.moveStartedAt);
+            this.updateDice();
+        }
     }
 
     private draw(): void {
         CanvasUtils.clearBoard(this.ctx, this.boardImage);
-        CanvasUtils.drawPawns(this.ctx, this.positions);
+        this.playerCanvasPositions = CanvasUtils.drawPawns(this.ctx, this.positions)[this.player.color];
     }
 
     private updatePlayerPanels(): void {
@@ -136,8 +209,11 @@ export default class Game {
         this.updateGame(gamePayload);
     }
 
-    private updateClock(moveCountdown: number): void {
-        this.clock.textContent = `00:${moveCountdown}`;
+    private updateClock(moveStartedAt: number): void {
+        const time = Math.floor((Date.now() - moveStartedAt) / 1000);
+        const seconds = MOVE_TIME_SECONDS - time % 60;
+
+        this.clock.textContent = `00:${seconds < 10 ? '0' + seconds : seconds}`;
     }
 
     private loop(): void {

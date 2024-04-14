@@ -13,7 +13,7 @@ export const CANVAS_POSITIONS: { [key: string]: [number, number][] } = {
     green: GREEN_CANVAS_POSITIONS,
     yellow: YELLOW_CANVAS_POSITIONS
 };
-export const STARTING_CANVAS_POSITIONS: { [key: string]: [number, number][] } = {
+export const STARTING_CANVAS_POSITIONS: { [key: string]: [[number, number], [number, number], [number, number], [number, number]] } = {
     red: [[75, 75], [150, 75], [75, 150], [150, 150]],
     blue: [[825, 75], [750, 75], [825, 150], [750, 150]],
     green: [[825, 825], [750, 825], [825, 750], [750, 750]],
@@ -28,3 +28,5 @@ export const HEX_COLORS = {
     blue: "#0000ff",
     yellow: "#ffff00"
 };
+
+export const MOVE_TIME_SECONDS = 30;

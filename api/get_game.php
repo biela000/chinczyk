@@ -1,11 +1,18 @@
 <?php
 require_once __DIR__ . "/vendor/autoload.php";
 require_once __DIR__ . "/utils/DbUtils.php";
+require_once __DIR__ . "/utils/constants.php";
 
 $database = DbUtils::connect();
 
-$collection = $database->selectCollection("games");
+$games = $database->selectCollection("games");
 
-$document = $collection->findOne(["_id" => (int)$_GET["id"]]);
+$game = $games->findOne(["_id" => (int)$_GET["id"]]);
 
-echo json_encode(["game" => $document]);
+$currentTimestamp = time() * 1000;
+
+if ($game["hasGameStarted"] && $currentTimestamp - $game["moveStartedAt"] >= MOVE_TIME_MILLISECONDS) {
+    DbUtils::passMove($games, $game);
+}
+
+echo json_encode(["game" => $game]);

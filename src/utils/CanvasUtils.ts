@@ -13,34 +13,52 @@ export default class CanvasUtils {
     }
 
     public static drawPawns(ctx: CanvasRenderingContext2D, positions: Positions) {
-        CanvasUtils.drawColorPawns(ctx, positions.red, "red");
-        CanvasUtils.drawColorPawns(ctx, positions.green, "green");
-        CanvasUtils.drawColorPawns(ctx, positions.blue, "blue");
-        CanvasUtils.drawColorPawns(ctx, positions.yellow, "yellow");
+        const canvasPositions: { red: [number, number][], blue: [number, number][], green: [number, number][], yellow: [number, number][] } = {
+            red: [],
+            blue: [],
+            green: [],
+            yellow: []
+        };
+
+        canvasPositions.red = CanvasUtils.drawColorPawns(ctx, positions.red, "red");
+        canvasPositions.green = CanvasUtils.drawColorPawns(ctx, positions.green, "green");
+        canvasPositions.blue = CanvasUtils.drawColorPawns(ctx, positions.blue, "blue");
+        canvasPositions.yellow = CanvasUtils.drawColorPawns(ctx, positions.yellow, "yellow");
+
+        return canvasPositions;
     }
 
     private static drawColorPawns(ctx: CanvasRenderingContext2D, positions: [number, number, number, number], color: Color) {
-        const alreadyDrawnPositions: number[] = [];
-        const repeatedPositionCount: [number, number, number, number] = [0, 0, 0, 0];
+        const alreadyDrawnPositions: { position: number, count: number }[] = [];
+        const canvasPositions: [number, number][] = [];
 
         for (let i = 0; i < positions.length; i++) {
-            if (positions[i] != 0 && !alreadyDrawnPositions.includes(positions[i])) {
-                CanvasUtils.drawPawn(ctx, HEX_COLORS[color], CANVAS_POSITIONS[color][positions[i]]);
-                alreadyDrawnPositions.push(positions[i]);
-            } else if (alreadyDrawnPositions.includes(positions[i])) {
-                repeatedPositionCount[alreadyDrawnPositions.indexOf(positions[i])]++;
+            const alreadyDrawnPosition = alreadyDrawnPositions.find((position) => position.position === positions[i]);
+            if (positions[i] === 45) {
+                canvasPositions.push([0, 0]);
+            }
+            if (positions[i] !== 0 && !alreadyDrawnPosition) {
+                CanvasUtils.drawPawn(ctx, HEX_COLORS[color], CANVAS_POSITIONS[color][positions[i] - 1]);
+                alreadyDrawnPositions.push({ position: positions[i], count: 1 });
+                canvasPositions.push(CANVAS_POSITIONS[color][positions[i] - 1]);
+            } else if (alreadyDrawnPosition && positions[i] !== 0) {
+                alreadyDrawnPosition.count++;
+                canvasPositions.push(CANVAS_POSITIONS[color][positions[i] - 1]);
             } else {
                 CanvasUtils.drawPawn(ctx, HEX_COLORS[color], STARTING_CANVAS_POSITIONS[color][i]);
+                canvasPositions.push(STARTING_CANVAS_POSITIONS[color][i]);
             }
         }
 
-        for (let i = 0; i < repeatedPositionCount.length; i++) {
-            if (repeatedPositionCount[i] > 0) {
+        for (let i = 0; i < alreadyDrawnPositions.length; i++) {
+            if (alreadyDrawnPositions[i].count > 1) {
                 ctx.font = "30px Arial";
                 ctx.fillStyle = "#ffffff";
-                ctx.fillText(repeatedPositionCount[i].toString(), ...CANVAS_POSITIONS[color][positions[i]]);
+                ctx.fillText(alreadyDrawnPositions[i].count.toString(), ...CANVAS_POSITIONS[color][alreadyDrawnPositions[i].position - 1]);
             }
         }
+
+        return canvasPositions;
     }
 
     public static drawPawn(ctx: CanvasRenderingContext2D, color: string, position: [number, number]) {
